@@ -1,5 +1,7 @@
 .container {
   padding: 0 2rem;
+  max-width: 100%;
+  min-height: 100vh;
 }
 
 .main {
@@ -70,7 +72,7 @@
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-  max-width: 800px;
+  max-height: 100%;
 }
 
 .card {
