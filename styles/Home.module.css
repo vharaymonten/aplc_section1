@@ -85,6 +85,8 @@
   border-radius: 10px;
   transition: color 0.15s ease, border-color 0.15s ease;
   max-width: 300px;
+  width: 300px;
+  height: 200px;
 }
 
 .card:hover,
@@ -103,6 +105,7 @@
   margin: 0;
   font-size: 1.25rem;
   line-height: 1.5;
+  text-overflow: clip;
 }
 
 .logo {

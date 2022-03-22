@@ -1,5 +1,13 @@
 // const { doesNotThrow } = require('assert');
+
+const monthNames = ["January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+const vaccineTypes = ["phizer", "sinovac", "astra", "sinopharm", "cansino", "pending"]
+
 const DateTime = require('luxon');
+import dynamic from 'next/dynamic';
 import papaparse from 'papaparse';
 function readCSV(csvString){
     return new Promise((resolve) => {
@@ -11,16 +19,36 @@ function readCSV(csvString){
     })
 }
 
-async function displayCSV(){
-    const results = await readCSV("vax_malaysia.csv");
-    
-    results.results.forEach(element => {
-        console.log(element.date);
 
-        console.log("--------");
-    });
+export function groupByMonth(results){
+
+    // Representing 12 Months
+    const dataTemp = new Object();
+
+    results.forEach(
+        (vax) => {
+            if (vax.daily == undefined) return;
+            
+            const dateTime = DateTime.DateTime.fromISO(vax.date);
+            const yearmonth = `${dateTime.year}-${monthNames[dateTime.month-1]}`
+            const daily = Number.parseInt(vax.daily);
+
+            if (dataTemp.hasOwnProperty(yearmonth)){
+                dataTemp[yearmonth] += daily;
+            }else{
+                dataTemp[yearmonth] = daily;
+            }
+            
+        }   
+    )
+
+    const labels = Object.keys(dataTemp);
+    const data = labels.map( label=> dataTemp[label]);
+    return {
+        data,
+        labels
+    }
 }
-
 export  default function groupByState(results){
     // This function is pure as it does not depend on other variable outside of this local function scope 
     const states = new Object();
@@ -45,15 +73,18 @@ export  default function groupByState(results){
     const labelX = Object.keys(states);
     //create Dataset for Y axis
     const dataY = labelX.map( state => states[state]);
-    console.log(dataY);
     return {
-        states : labelX,
-        dataY : dataY
+        labels : labelX,
+        data : dataY
     }
 
 }
 
 export async function filterByMonth(results,month){
+    // If all months
+    if (month == -1){
+        return [...results];
+    }
     const r = results.filter( (el) => {
         if (new Date(el.date).getMonth() == month){
             return el;
@@ -69,70 +100,130 @@ export async function filterByState(results, state){
     return filteredResults;
 }
 
-function sumFullyVacinated(data){
-    const sum = data.reduce( (prev, next) => prev + parseInt(next.daily_full), 0);
-    return sum;
-}
-
-function mapDataToWeeklyBasis(data){
+function mapDataToWeeklyBasis(csv){
     const weeklyBasisData = {};
-    data.forEach( row => {
-
+    csv.forEach( row => {
         const dt = DateTime.DateTime.fromJSDate(new Date(row.date));
-        const key = `${dt.year}-${dt.weekNumber}`
-        if (Object.keys(weeklyBasisData).includes(key)){
-            weeklyBasisData[key].total = parseInt(row.daily_full);
-        }else{
+        const key = `week ${dt.weekNumber} of ${dt.year}`
+
+        
+        if (row.daily_full_adol == undefined) return;
+        
+        //Ignore booster as there is no specific data for booster for adol or child
+
+        const adol =Number.parseInt(row.daily_full_adol) +
+                    Number.parseInt(row.daily_partial_adol) 
+                    // Number.parseInt(row.daily_booster_adol);
+
+        const child =Number.parseInt(row.daily_full_child) + 
+                     Number.parseInt(row.daily_partial_child) 
+                    
+                    
+                    //  Number.parseInt(row.daily_booster_child)
+
+        // console.log(adol);
+        if (!weeklyBasisData.hasOwnProperty(key)){
             weeklyBasisData[key] = {
-               total: parseInt(row.daily_full),
-               start : dt.toISODate(),
-               end : dt.endOf('week').toISODate()
+                adolHigh : adol,
+                adolLow : adol,
+                childHigh : child,
+                childLow : child
             }
+        }else{
+            const weekly = weeklyBasisData[key];
+            // Get the lowest and highest for adol and child
+            weekly.adolHigh = weekly.adolHigh < adol ? adol : weekly.adolHigh;
+            weekly.adolLow = weekly.adolLow > adol ? adol : weekly.adolLow;
+            weekly.childHigh = weekly.childHigh < child ? child : weekly.childHigh;
+            weekly.childLow = weekly.childLow > child ? child : weekly.childLow;
         }
     })
     return weeklyBasisData;
 }
 
-function totalByVaccineType(data, type){
-   const type1 = type + "1";
-   const type2 = type + "2";
-   const type3 = type + "3";
+/**
+ * Generate random value between min (include) and max (include)
+ * @param {*} min: 
+ * @param {*} max 
+ */
+function randomRange(min, max){
+    const min_ = Math.ceil(min);
+    const max_ = Math.floor(max);
 
-   const total = data.reduce( (total, row) => {
-        return total +  (parseInt(row[type1]) + parseInt(row[type2]) + parseInt(row[type3]));
-   }, 0)
-
-   return total;
+    return Math.floor(Math.random()  * (max - min  + 1)) + min;
+}
+/**
+ * 
+ * @returns {
+ *  backgroundColor : rgba(r, g, b, a),
+ *  borderColor : rgba(r, g, b, a),
+ * }
+ */
+function generateRandomColorForChart(){
+    const r = randomRange(0, 255);
+    const g = randomRange(0, 255);
+    const b = randomRange(0, 255);
+    return {
+        backgroundColor : `rgba(${r}, ${g}, ${b}, 0.4)`,
+        borderColor : `rgba(${r}, ${g}, ${b}, 1)`,
+    }
 }
 
-async function run(){
-    const data = await filterByState("Johor");
-    const sumResult = sumFullyVacinated(data);
-    return sumResult;
+function groupByVaccineType(csv, ...vaccines){
+    const weeklyVaccines = new Object();
+    csv.forEach( row=>{
+        const dt = DateTime.DateTime.fromJSDate(new Date(row.date));
+        const key = `week ${dt.weekNumber} of ${dt.year}`
+        
+        // if one of row is undefined 
+        if (row.daily == undefined) return;
+
+        if (! weeklyVaccines.hasOwnProperty(key)){
+            weeklyVaccines[key] = {};
+        }
+
+        vaccines.forEach( (vaccine) => {
+            const vaccinetotal = Number.parseInt(row[vaccine + "1"]) + 
+                            Number.parseInt(row[vaccine + "2"]) + 
+                            Number.parseInt(row[vaccine + "3"])
+            if (! weeklyVaccines[key].hasOwnProperty(vaccine)){
+                weeklyVaccines[key][vaccine] = vaccinetotal
+            }else{
+                weeklyVaccines[key][vaccine] += vaccinetotal;
+            }
+        })
+    })
+    return weeklyVaccines;
+
 }
 
-async function runNumber3(){
-    const data = await readCSV("vax_malaysia.csv");
-    // const data = await filterByState("Johor");
-    const total = totalByVaccineType(data, "pfizer");
-    console.log(total);
-    const weeklyBasisData = mapDataToWeeklyBasis(data);
-    const keys = Object.keys(weeklyBasisData);
-    let maxKey = keys[0];
-    keys.forEach( k => {
-        if (weeklyBasisData[k].total > weeklyBasisData[maxKey].total){
-            maxKey = k;
+function createDataset(csv, fieldName, label){
+    const data = []
+    csv.forEach( (el) =>{ 
+        if (el[fieldName] != undefined){
+            data.push(el[fieldName]);
         }
     })
-    console.log(weeklyBasisData[maxKey]);
+    const {backgroundColor, borderColor} = generateRandomColorForChart();
+    return {
+        backgroundColor,
+        borderColor,
+        data : data,
+        fill : false,
+        label
+    }
 }
 
 module.exports = {
     filterByMonth,
     groupByState,
     filterByState,
-    sumFullyVacinated,
     mapDataToWeeklyBasis,
-    totalByVaccineType,
     readCSV,
+    generateRandomColorForChart,
+    createDataset,
+    groupByMonth,
+    groupByVaccineType
 }
+
+
