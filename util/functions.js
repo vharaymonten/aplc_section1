@@ -183,9 +183,17 @@ function groupByVaccineType(csv, ...vaccines){
         }
 
         vaccines.forEach( (vaccine) => {
-            const vaccinetotal = Number.parseInt(row[vaccine + "1"]) + 
-                            Number.parseInt(row[vaccine + "2"]) + 
-                            Number.parseInt(row[vaccine + "3"])
+            let vac1 = Number.parseInt(row[vaccine + "1"]);
+            let vac2 = Number.parseInt(row[vaccine + "2"]); 
+            let vac3 = Number.parseInt(row[vaccine + "3"]);
+            vac1 = !Number.isNaN(vac1)? vac1:  0;
+            vac2 = !Number.isNaN(vac2) ? vac2:  0;
+            vac3 = !Number.isNaN(vac3) ? vac3 : 0;
+
+
+            const vaccinetotal = vac1 + vac2 + vac3;
+            //Skip
+            if (vaccinetotal == NaN) return;
             if (! weeklyVaccines[key].hasOwnProperty(vaccine)){
                 weeklyVaccines[key][vaccine] = vaccinetotal
             }else{
