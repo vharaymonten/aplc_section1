@@ -22,7 +22,7 @@ export async function getStaticProps(){
 
     const csv = await readCSV(csvText);
 
-    const vaccines = ['sinovac', 'sinopharm', 'cansino', 'astra', 'phizer', 'pending'];
+    const vaccines = ['sinovac', 'sinopharm', 'cansino', 'astra', 'pfizer', 'pending'];
 
     const vaccineDataset = groupByVaccineType(csv, ...vaccines);
     const labels = Object.keys(vaccineDataset);
