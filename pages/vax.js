@@ -1,9 +1,9 @@
-import { readCSV, createDataset, filterByMonth, generateRandomColorForChart, groupByMonth} from '../util/functions';
+import { readCSV, createDataset, filterByMonth, generateRandomColorForChart} from '../util/functions';
 import Layout from '../components/layout';
 import { useState, useEffect } from 'react'
 import { Chart as ChartJS } from 'chart.js/auto'
 import { Chart } from 'react-chartjs-2'
-
+import {vaxMalaysiaDataset} from '../util/links'
 import { Line} from 'react-chartjs-2';
 
 
@@ -54,7 +54,7 @@ export default function Vax({ data, histogram }) {
     )
 }
 async function getDataset(month) {
-    const csvRaw = await fetch('http://localhost:3000/csv/vax_malaysia.csv')
+    const csvRaw = await fetch(vaxMalaysiaDataset);
     const csvText = await csvRaw.text();
 
     const csv = await readCSV(csvText);
