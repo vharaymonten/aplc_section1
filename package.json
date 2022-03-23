@@ -11,6 +11,7 @@
     "chart.js": "^3.7.1",
     "luxon": "^2.3.1",
     "next": "12.0.10",
+    "nextjs-progressbar": "0.0.14",
     "papaparse": "^5.3.2",
     "react": "17.0.2",
     "react-chartjs-2": "^4.0.1",
