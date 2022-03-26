@@ -15,7 +15,9 @@ function readCSV(csvString){
             header : true,
         });
 
-        resolve(parseResult.data);
+        const data = parseResult.data;
+        data.pop();
+        resolve(data);
     })
 }
 
@@ -27,8 +29,6 @@ export function groupByMonth(results){
 
     results.forEach(
         (vax) => {
-            if (vax.daily == undefined) return;
-            
             const dateTime = DateTime.DateTime.fromISO(vax.date);
             const yearmonth = `${dateTime.year}-${monthNames[dateTime.month-1]}`
             const daily = Number.parseInt(vax.daily);
@@ -56,15 +56,12 @@ export  default function groupByState(results){
     // Fetch the state first
     results.forEach(el =>{
         
-        if (el.state == undefined){
-            return
-        }
         // Create a property in JS objec if does not exist. 
         if (! states.hasOwnProperty(el.state)){
-            states[el.state] = Number.parseInt(el.daily_full);
+            states[el.state] = Number.parseInt(el.daily);
         }else{
         // Add the cumulative to the existing states
-            states[el.state] += Number.parseInt(el.daily_full);
+            states[el.state] += Number.parseInt(el.daily);
         }
 
     })
