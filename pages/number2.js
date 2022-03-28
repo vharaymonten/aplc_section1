@@ -11,8 +11,14 @@ export default function Number2({stateData, monthlyData}){
         <>
         <Layout>
             <div className={"main"}>
-                <Bar data={stateData}/>
-                <Bar data={monthlyData} />
+                <div className={"chartCard"}>
+
+                    <Bar data={stateData}/>
+
+                </div>
+                <div className={"chartCard"}>
+                    <Bar data={monthlyData} />
+                </div>
             </div>
         </Layout>
         </>

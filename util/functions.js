@@ -7,7 +7,6 @@ const monthNames = ["January", "February", "March", "April", "May", "June",
 const vaccineTypes = ["phizer", "sinovac", "astra", "sinopharm", "cansino", "pending"]
 
 const DateTime = require('luxon');
-import dynamic from 'next/dynamic';
 import papaparse from 'papaparse';
 function readCSV(csvString){
     return new Promise((resolve) => {
@@ -63,8 +62,8 @@ export  default function groupByState(results){
         // Add the cumulative to the existing states
             states[el.state] += Number.parseInt(el.daily);
         }
-
     })
+    
     
     // Create labels for histogram
     const labelX = Object.keys(states);
@@ -203,12 +202,7 @@ function groupByVaccineType(csv, ...vaccines){
 }
 
 function createDataset(csv, fieldName, label){
-    const data = []
-    csv.forEach( (el) =>{ 
-        if (el[fieldName] != undefined){
-            data.push(el[fieldName]);
-        }
-    })
+    const data = csv.map(el => el[fieldName]);
     const {backgroundColor, borderColor} = generateRandomColorForChart();
     return {
         backgroundColor,

@@ -10,7 +10,9 @@ export default function Number3({weeklyDataset}){
     return (
     <Layout>
         <div className={"main"}>
-            <Line data={weeklyDataset}/>
+            <div className={"chartCard"}>
+                <Line data={weeklyDataset}/>
+            </div>
         </div>
     </Layout>
     )
