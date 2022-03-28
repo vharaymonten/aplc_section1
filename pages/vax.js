@@ -61,21 +61,18 @@ async function getDataset(month) {
     const byMonth = await filterByMonth(csv, month);
     const labelX = byMonth.map((el) => el.date);
 
-    const partialColors = generateRandomColorForChart();
-    const boosterColors = generateRandomColorForChart();
-    const dailyBooster = generateRandomColorForChart();
+    // const partialColors = generateRandomColorForChart();
+    // const boosterColors = generateRandomColorForChart();
+    // const dailyBooster = generateRandomColorForChart();
     const dataset = [
         {
             ...createDataset(byMonth, 'daily_partial', 'Daily Partial'),
-            ...partialColors 
         },
         {
             ...createDataset(byMonth, 'daily_full', 'Daily Partial'),
-            ...boosterColors,
         },
         {
             ...createDataset(byMonth, 'daily_booster', 'Daily Booster'),
-            ...dailyBooster
         },
     ]
 
